@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Menu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            color: var(--tg-theme-text-color, #222);
+            background: var(--tg-theme-bg-color, #fff);
+            margin: 0;
+        }
+        .menu-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .menu-item {
+            display: flex;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .item-info {
+            flex: 1;
+        }
+        .item-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .item-description {
+            font-size: 14px;
+            color: #666;
+        }
+        .item-price {
+            font-weight: bold;
+            margin: 0 15px;
+        }
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+        }
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+        .quantity {
+            margin: 0 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .order-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #2ecc71;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: none;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-container">
+        <h1>Menu</h1>
+        <div class="menu-item" data-id="item1" data-price="10">
+            <div class="item-info">
+                <div class="item-name">Pizza</div>
+                <div class="item-description">Classic cheese pizza</div>
+            </div>
+            <div class="item-price">$10</div>
+            <div class="quantity-controls">
+                <div class="quantity-btn minus" onclick="changeQuantity('item1', -1)">-</div>
+                <div class="quantity" id="qty-item1">0</div>
+                <div class="quantity-btn plus" onclick="changeQuantity('item1', 1)">+</div>
+            </div>
+        </div>
+        
+        <div class="menu-item" data-id="item2" data-price="8">
+            <div class="item-info">
+                <div class="item-name">Burger</div>
+                <div class="item-description">Beef burger with cheese</div>
+            </div>
+            <div class="item-price">$8</div>
+            <div class="quantity-controls">
+                <div class="quantity-btn minus" onclick="changeQuantity('item2', -1)">-</div>
+                <div class="quantity" id="qty-item2">0</div>
+                <div class="quantity-btn plus" onclick="changeQuantity('item2', 1)">+</div>
+            </div>
+        </div>
+        
+        <div class="menu-item" data-id="item3" data-price="5">
+            <div class="item-info">
+                <div class="item-name">Salad</div>
+                <div class="item-description">Fresh garden salad</div>
+            </div>
+            <div class="item-price">$5</div>
+            <div class="quantity-controls">
+                <div class="quantity-btn minus" onclick="changeQuantity('item3', -1)">-</div>
+                <div class="quantity" id="qty-item3">0</div>
+                <div class="quantity-btn plus" onclick="changeQuantity('item3', 1)">+</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="order-button" id="orderBtn" onclick="placeOrder()">Place Order</div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        let cart = {};
+        let totalItems = 0;
+        
+        function changeQuantity(itemId, change) {
+            let qtyElement = document.getElementById('qty-' + itemId);
+            let currentQty = parseInt(qtyElement.innerText);
+            let newQty = Math.max(0, currentQty + change);
+            
+            qtyElement.innerText = newQty;
+            
+            if (newQty > 0) {
+                if (!cart[itemId]) {
+                    const menuItem = document.querySelector(`.menu-item[data-id="${itemId}"]`);
+                    cart[itemId] = {
+                        id: itemId,
+                        name: menuItem.querySelector('.item-name').innerText,
+                        price: parseFloat(menuItem.dataset.price),
+                        quantity: newQty
+                    };
+                } else {
+                    cart[itemId].quantity = newQty;
+                }
+            } else {
+                delete cart[itemId];
+            }
+            
+            updateOrderButton();
+        }
+        
+        function updateOrderButton() {
+            const orderBtn = document.getElementById('orderBtn');
+            totalItems = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
+            
+            if (totalItems > 0) {
+                let total = Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                orderBtn.innerText = `Place Order ($${total})`;
+                orderBtn.style.display = 'block';
+            } else {
+                orderBtn.style.display = 'none';
+            }
+        }
+        
+        function placeOrder() {
+            // Debug output
+            console.log("Sending data to Telegram:", cart);
+            
+            // Make sure cart is not empty
+            if (Object.keys(cart).length === 0) {
+                alert("Please add items to your order first");
+                return;
+            }
+            
+            // Convert cart to a simple string format if JSON doesn't work
+            const cartData = JSON.stringify(cart);
+            console.log("Stringified data:", cartData);
+            
+            // Set event listener for when the WebApp closes
+            tg.onEvent('viewportChanged', function() {
+                console.log('Viewport changed, WebApp might be closing');
+            });
+            
+            // Try to send data
+            try {
+                // Use MainButton for better compatibility
+                tg.MainButton.setText('ORDERING...');
+                tg.MainButton.show();
+                setTimeout(() => {
+                    tg.sendData(cartData);
+                    // Don't close immediately to ensure data is sent
+                    setTimeout(() => tg.close(), 100);
+                }, 100);
+            } catch (error) {
+                console.error("Error sending data:", error);
+                alert("Error sending order: " + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

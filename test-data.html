@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minimal Telegram Web App Test</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 10px; }
+        .log { margin-top: 10px; border: 1px solid #ccc; padding: 5px; font-size: 0.9em; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Minimal Data Sending Test</h1>
+    <p>This page will attempt to send data to the bot automatically.</p>
+    <div id="status">Status: Initializing...</div>
+    <div id="log-output" class="log">Logs will appear here...</div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const logOutputDiv = document.getElementById('log-output');
+
+        function logToPage(message, isError = false) {
+            console[isError ? 'error' : 'log'](message);
+            const p = document.createElement('p');
+            p.textContent = message;
+            if (isError) {
+                p.classList.add('error');
+            }
+            logOutputDiv.appendChild(p);
+        }
+
+        try {
+            logToPage("Telegram WebApp script loaded.");
+            if (window.Telegram && window.Telegram.WebApp) {
+                logToPage("Telegram.WebApp object found.");
+
+                Telegram.WebApp.ready(); // Inform Telegram that the web app is ready
+                logToPage("Telegram.WebApp.ready() called.");
+
+                // Data to send
+                const dataToSend = JSON.stringify({
+                    test: "This is a value from test-data.html", // Added 'test' key
+                    source: "test-data-html-page", // Updated source for clarity
+                    message: "Hello from test-data.html!",
+                    timestamp: new Date().toISOString()
+                });
+                logToPage(`Prepared data: ${dataToSend}`);
+
+                // Send data to the bot
+                // This is the crucial part!
+                Telegram.WebApp.sendData(dataToSend);
+                logToPage("Telegram.WebApp.sendData() called. If no errors follow, data should have been sent.");
+                statusDiv.textContent = "Status: Data sending attempted. Check bot logs.";
+
+                // You can uncomment this to close the web app after sending data
+                // setTimeout(() => {
+                //     logToPage("Attempting to close WebApp.");
+                //     Telegram.WebApp.close();
+                // }, 1000);
+
+            } else {
+                logToPage("Error: window.Telegram.WebApp is not available. Make sure you are running this inside Telegram.", true);
+                statusDiv.textContent = "Status: Error - Not in Telegram environment?";
+            }
+        } catch (e) {
+            logToPage(`Critical JavaScript Error: ${e.message}`, true);
+            statusDiv.textContent = `Status: Critical JS Error - ${e.message}`;
+            console.error(e);
+        }
+    </script>
+</body>
+</html>

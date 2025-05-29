@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://telegram.org/js/telegram-web-app.js 'unsafe-inline';">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Minimal Test</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            margin: 0;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        button {
+            background-color: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Minimal Test</h1>
+    <p>Testing Telegram Web App data sending</p>
+    <button id="sendButton">Send Test Data</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Telegram WebApp
+            const webapp = window.Telegram.WebApp;
+            webapp.ready();
+            webapp.expand();
+            
+            // Set up the main button
+            webapp.MainButton.setText('SEND DATA');
+            webapp.MainButton.onClick(function() {
+                const data = "test_string_123";
+                webapp.sendData(data);
+            });
+            webapp.MainButton.show();
+            
+            // Set up the custom button
+            document.getElementById('sendButton').addEventListener('click', function() {
+                const data = "test_string_456";
+                webapp.sendData(data);
+            });
+        });
+    </script>
+</body>
+</html>
